@@ -1,0 +1,10 @@
+,,,
+Database: Gwadar and other ports with Chinese involvement,,,
+,,,
+,,,
+#,Sheet name,Description,Sources
+1,ports list,"Collection of ports partly or entirely built, financed or owned by Chinese companies","multiple, see sheet"
+2,port arrivals,Number of ship calls over time at Gwadar and select ports for comparison,MarineTraffic
+3,port throughput and capacity,"Container throughput volume and annual container capacity at Gwadar and select ports for comparison, most recently available years","multiple, see sheet"
+4,BRI investments over time,Volume of investments and construction expenditure on Belt and Road projects over time,AEI China Global Investment Tracker
+5,debt to China,"Public or publicly guaranteed debt to China by country, compared to GNI and total debt stocks",World Bank International Debt Statistics
