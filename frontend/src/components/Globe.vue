@@ -5,15 +5,29 @@
             <p class="subtitle">Interactive visualization of Chinese port investments worldwide</p>
         </div>
         <div ref="globeContainer" class="globe"></div>
-        <div v-if="selectedPort" class="info-panel">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">{{ selectedPort.port_name }}</h5>
-                    <span class="badge bg-primary">{{ selectedPort.country }}</span>
+        <div class="info-panel" :class="{ 'panel-open': selectedPort }">
+            <div class="panel-content">
+                <div v-if="selectedPort" class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">{{ selectedPort.port_name }}</h5>
+                        <span class="badge bg-primary">{{ selectedPort.country }}</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">{{ selectedPort.description }}</p>
+                        <div class="port-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Type:</span>
+                                <span class="detail-value">{{ selectedPort.type }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Completion Year:</span>
+                                <span class="detail-value">{{ selectedPort.completion_year }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <p class="card-text">{{ selectedPort.description }}</p>
-                    <p class="card-text"><small class="text-muted">Type: {{ selectedPort.type }}</small></p>
+                <div v-else class="no-selection">
+                    <p>Click on any port to view details</p>
                 </div>
             </div>
         </div>
@@ -128,26 +142,39 @@ onUnmounted(() => {
 }
 
 .info-panel {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease-in-out;
     z-index: 1000;
-    max-width: 400px;
-    pointer-events: none;
+    backdrop-filter: blur(10px);
+}
+
+.panel-open {
+    right: 0;
+}
+
+.panel-content {
+    height: 100%;
+    overflow-y: auto;
+    padding: 20px;
 }
 
 .card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(5px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    border: none;
+    background: white;
     border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
 }
 
 .card-header {
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(0, 0, 0, 0.03);
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    padding: 1rem;
+    padding: 1.2rem;
     border-radius: 12px 12px 0 0;
     display: flex;
     justify-content: space-between;
@@ -156,26 +183,80 @@ onUnmounted(() => {
 
 .card-title {
     margin: 0;
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     font-weight: 600;
+    color: #333;
 }
 
 .badge {
     font-size: 0.8rem;
     padding: 0.4em 0.8em;
+    background: #007bff;
 }
 
 .card-body {
-    padding: 1rem;
+    padding: 1.2rem;
 }
 
 .card-text {
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-    line-height: 1.5;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #444;
+    margin-bottom: 1.5rem;
 }
 
-.card-text:last-child {
+.port-details {
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.detail-item:last-child {
     margin-bottom: 0;
+}
+
+.detail-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #333;
+}
+
+.no-selection {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #666;
+    font-size: 1.1rem;
+    text-align: center;
+    padding: 2rem;
+}
+
+/* Scrollbar styling */
+.panel-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.panel-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.panel-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.panel-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
 }
 </style>
