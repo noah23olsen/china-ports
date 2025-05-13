@@ -1,7 +1,7 @@
 <template>
     <div class="globe-container">
         <div class="title-container">
-            <h1>China's Global Port Network</h1>
+            <h1>China's Global Port Network (Beta)</h1>
             <p class="subtitle">Interactive visualization of Chinese port investments worldwide</p>
         </div>
         <div ref="globeContainer" class="globe"></div>
