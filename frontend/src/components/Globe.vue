@@ -13,7 +13,7 @@
                             <h5 class="card-title">{{ selectedPort.port_name }}</h5>
                             <span class="badge">{{ selectedPort.country }}</span>
                         </div>
-                        <button class="close-btn" @click="selectedPort = null" aria-label="Close">&times;</button>
+                        <button class="close-btn" @click="closeInfoPanel" aria-label="Close">&times;</button>
                     </div>
                     <div class="card-body">
                         <div class="port-details">
@@ -35,7 +35,9 @@ import Globe from 'globe.gl'
 
 const globeContainer = ref(null)
 const selectedPort = ref(null)
+const selectedArcPortName = ref(null)
 let globe = null
+let arcsRawData = []
 
 function cleanDescription(desc) {
     if (!desc) return ''
@@ -53,7 +55,7 @@ onMounted(async () => {
         .width(globeContainer.value.clientWidth)
         .height(globeContainer.value.clientHeight)
         .onGlobeReady(() => {
-            globe.pointOfView({ lat: 10, lng: -30, altitude: 2.2 }, 0);
+            globe.pointOfView({ lat: 1, lng: 13, altitude: 2.4 }, 0);
         })
 
     // Load and process data
@@ -63,7 +65,7 @@ onMounted(async () => {
         const ports = parseCSV(csvText)
 
         // Tall, solid, transparent red cylinders (arcs)
-        globe.arcsData(ports.map(port => ({
+        arcsRawData = ports.map(port => ({
             ...port,
             startLat: port.lat,
             startLng: port.lng,
@@ -72,8 +74,9 @@ onMounted(async () => {
             color: 'rgba(255,0,0,0.5)',
             stroke: 3,
             altitude: 0.7
-        })))
-            .arcColor('color')
+        }))
+        globe.arcsData(arcsRawData)
+            .arcColor(a => a.port_name === selectedArcPortName.value ? 'rgba(0,255,0,0.7)' : 'rgba(255,0,0,0.5)')
             .arcAltitude('altitude')
             .arcStroke('stroke')
             .arcDashLength(1)
@@ -82,13 +85,19 @@ onMounted(async () => {
             .arcDashAnimateTime(0)
             .onArcClick(d => {
                 selectedPort.value = d;
+                selectedArcPortName.value = d.port_name;
+                if (globe && globe.controls()) {
+                    globe.controls().autoRotate = false;
+                }
+                // Force re-render for green highlight
+                globe.arcsData([...arcsRawData]);
             });
 
         // Points for clickability and glow
         globe.pointsData(ports)
             .pointAltitude(0.01)
             .pointColor(() => 'rgba(255, 255, 0, 0.8)')
-            .pointRadius(0.5)
+            .pointRadius(0.7)
             .pointsMerge(false)
             .pointLabel(d => d.port_name)
         globe.onPointClick(d => {
@@ -124,6 +133,16 @@ function parseCSV(csvText) {
             }
         })
         .filter(port => !isNaN(port.lat) && !isNaN(port.lng))
+}
+
+function closeInfoPanel() {
+    selectedPort.value = null;
+    selectedArcPortName.value = null;
+    if (globe && globe.controls()) {
+        globe.controls().autoRotate = true;
+    }
+    // Force re-render for green highlight removal
+    globe.arcsData([...arcsRawData]);
 }
 
 onUnmounted(() => {
@@ -192,13 +211,14 @@ onUnmounted(() => {
 .panel-content {
     height: 100%;
     overflow-y: auto;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 16px;
 }
 
 .card {
-    background: rgba(17, 25, 40, 0.85);
+    background: rgba(17, 25, 40, 0.55);
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: white;
 }
