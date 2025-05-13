@@ -36,33 +36,50 @@ import Globe from 'globe.gl'
 const globeContainer = ref(null)
 const selectedPort = ref(null)
 let globe = null
+let userInteracting = false
+let interactionTimeout = null
 
 function cleanDescription(desc) {
     if (!desc) return ''
     let cleaned = desc.trim()
-    // Remove leading/trailing quotes
     cleaned = cleaned.replace(/^"+|"+$/g, '')
-    // Capitalize first letter
     cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
     return cleaned
 }
 
+function setAutoRotate(enabled) {
+    if (globe && globe.controls()) {
+        globe.controls().autoRotate = enabled;
+    }
+}
+
 onMounted(async () => {
-    // Initialize Globe.GL
     globe = Globe()(globeContainer.value)
         .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
         .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
         .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
         .width(globeContainer.value.clientWidth)
         .height(globeContainer.value.clientHeight)
-        .pointAltitude(0.01)
-        .pointColor(() => 'rgba(255, 0, 0, 0.8)')
-        .pointRadius(0.5)
-        .pointsMerge(false)
-        .pointLabel(d => d.port_name)
-        .onPointClick(d => {
-            selectedPort.value = d
+        .onGlobeReady(() => {
+            globe.pointOfView({ lat: 10, lng: -30, altitude: 2.2 }, 0);
         })
+
+    // Listen for user interaction to pause auto-rotate
+    const controls = globe.controls();
+    if (controls) {
+        controls.addEventListener('start', () => {
+            userInteracting = true;
+            setAutoRotate(false);
+        });
+        controls.addEventListener('end', () => {
+            userInteracting = false;
+            // Resume auto-rotate after a short delay
+            clearTimeout(interactionTimeout);
+            interactionTimeout = setTimeout(() => {
+                if (!userInteracting) setAutoRotate(true);
+            }, 2000);
+        });
+    }
 
     // Load and process data
     try {
@@ -70,18 +87,51 @@ onMounted(async () => {
         const csvText = await response.text()
         const ports = parseCSV(csvText)
 
-        // Add points to the globe
+        // Tall, solid, transparent red cylinders (arcs)
+        globe.arcsData(ports.map(port => ({
+            ...port,
+            startLat: port.lat,
+            startLng: port.lng,
+            endLat: port.lat + 0.25,
+            endLng: port.lng,
+            color: 'rgba(255,0,0,0.5)',
+            stroke: 3,
+            altitude: 0.7
+        })))
+            .arcColor('color')
+            .arcAltitude('altitude')
+            .arcStroke('stroke')
+            .arcDashLength(1)
+            .arcDashGap(0)
+            .arcDashInitialGap(0)
+            .arcDashAnimateTime(0)
+            .onArcClick(d => {
+                selectedPort.value = d;
+            });
+
+        // Points for clickability and glow
         globe.pointsData(ports)
+            .pointAltitude(0.01)
+            .pointColor(() => 'rgba(255, 255, 0, 0.8)')
+            .pointRadius(0.5)
+            .pointsMerge(false)
+            .pointLabel(d => d.port_name)
+        globe.onPointClick(d => {
+            selectedPort.value = d
+        })
+
     } catch (error) {
         console.error('Error loading port data:', error)
     }
+
+    // Enable auto-rotation by default
+    setAutoRotate(true);
+    if (globe.controls()) globe.controls().autoRotateSpeed = 0.3;
 })
 
 function parseCSV(csvText) {
     const lines = csvText.split('\n')
-    // Skip the first two header rows
     const headers = lines[2].split(',')
-
     return lines.slice(3)
         .filter(line => line.trim())
         .map(line => {
@@ -103,6 +153,7 @@ onUnmounted(() => {
     if (globe) {
         globe._destructor()
     }
+    clearTimeout(interactionTimeout);
 })
 </script>
 
