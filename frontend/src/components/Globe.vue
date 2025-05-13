@@ -36,8 +36,6 @@ import Globe from 'globe.gl'
 const globeContainer = ref(null)
 const selectedPort = ref(null)
 let globe = null
-let userInteracting = false
-let interactionTimeout = null
 
 function cleanDescription(desc) {
     if (!desc) return ''
@@ -45,12 +43,6 @@ function cleanDescription(desc) {
     cleaned = cleaned.replace(/^"+|"+$/g, '')
     cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
     return cleaned
-}
-
-function setAutoRotate(enabled) {
-    if (globe && globe.controls()) {
-        globe.controls().autoRotate = enabled;
-    }
 }
 
 onMounted(async () => {
@@ -63,23 +55,6 @@ onMounted(async () => {
         .onGlobeReady(() => {
             globe.pointOfView({ lat: 10, lng: -30, altitude: 2.2 }, 0);
         })
-
-    // Listen for user interaction to pause auto-rotate
-    const controls = globe.controls();
-    if (controls) {
-        controls.addEventListener('start', () => {
-            userInteracting = true;
-            setAutoRotate(false);
-        });
-        controls.addEventListener('end', () => {
-            userInteracting = false;
-            // Resume auto-rotate after a short delay
-            clearTimeout(interactionTimeout);
-            interactionTimeout = setTimeout(() => {
-                if (!userInteracting) setAutoRotate(true);
-            }, 2000);
-        });
-    }
 
     // Load and process data
     try {
@@ -124,9 +99,11 @@ onMounted(async () => {
         console.error('Error loading port data:', error)
     }
 
-    // Enable auto-rotation by default
-    setAutoRotate(true);
-    if (globe.controls()) globe.controls().autoRotateSpeed = 0.3;
+    // Enable faster auto-rotation by default
+    if (globe.controls()) {
+        globe.controls().autoRotate = true;
+        globe.controls().autoRotateSpeed = 0.2;
+    }
 })
 
 function parseCSV(csvText) {
@@ -153,7 +130,6 @@ onUnmounted(() => {
     if (globe) {
         globe._destructor()
     }
-    clearTimeout(interactionTimeout);
 })
 </script>
 
