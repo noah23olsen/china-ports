@@ -17,12 +17,16 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 <style>
 html,
 body,
-#app,
-.container-fluid,
-.row,
-.col-12 {
+#app {
   height: 100%;
+  width: 100%;
   margin: 0;
   padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  min-width: 100vw;
+  overflow: hidden;
 }
 </style>
