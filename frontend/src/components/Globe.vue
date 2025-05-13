@@ -5,29 +5,24 @@
             <p class="subtitle">Interactive visualization of Chinese port investments worldwide</p>
         </div>
         <div ref="globeContainer" class="globe"></div>
-        <div class="info-panel" :class="{ 'panel-open': selectedPort }">
+        <div v-if="selectedPort" class="info-panel">
             <div class="panel-content">
-                <div v-if="selectedPort" class="card">
+                <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title">{{ selectedPort.port_name }}</h5>
-                        <span class="badge bg-primary">{{ selectedPort.country }}</span>
+                        <div class="header-main">
+                            <h5 class="card-title">{{ selectedPort.port_name }}</h5>
+                            <span class="badge">{{ selectedPort.country }}</span>
+                        </div>
+                        <button class="close-btn" @click="selectedPort = null" aria-label="Close">&times;</button>
                     </div>
                     <div class="card-body">
-                        <p class="card-text">{{ selectedPort.description }}</p>
                         <div class="port-details">
                             <div class="detail-item">
                                 <span class="detail-label">Type:</span>
                                 <span class="detail-value">{{ selectedPort.type }}</span>
                             </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Completion Year:</span>
-                                <span class="detail-value">{{ selectedPort.completion_year }}</span>
-                            </div>
                         </div>
                     </div>
-                </div>
-                <div v-else class="no-selection">
-                    <p>Click on any port to view details</p>
                 </div>
             </div>
         </div>
@@ -41,6 +36,16 @@ import Globe from 'globe.gl'
 const globeContainer = ref(null)
 const selectedPort = ref(null)
 let globe = null
+
+function cleanDescription(desc) {
+    if (!desc) return ''
+    let cleaned = desc.trim()
+    // Remove leading/trailing quotes
+    cleaned = cleaned.replace(/^"+|"+$/g, '')
+    // Capitalize first letter
+    cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
+    return cleaned
+}
 
 onMounted(async () => {
     // Initialize Globe.GL
@@ -118,22 +123,26 @@ onUnmounted(() => {
     z-index: 1000;
     color: white;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    padding: 10px 20px;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 10px;
-    backdrop-filter: blur(5px);
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    max-width: 90%;
+    width: 600px;
 }
 
 .title-container h1 {
-    font-size: 2rem;
+    font-size: clamp(1.5rem, 5vw, 2rem);
     margin: 0;
     font-weight: 600;
+    line-height: 1.2;
 }
 
 .subtitle {
-    font-size: 1rem;
-    margin: 5px 0 0;
+    font-size: clamp(0.9rem, 3vw, 1rem);
+    margin: 8px 0 0;
     opacity: 0.9;
+    line-height: 1.4;
 }
 
 .globe {
@@ -143,55 +152,85 @@ onUnmounted(() => {
 
 .info-panel {
     position: fixed;
-    top: 0;
-    right: -400px;
-    width: 400px;
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.98);
-    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
-    transition: right 0.3s ease-in-out;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
     z-index: 1000;
-    backdrop-filter: blur(10px);
-}
-
-.panel-open {
-    right: 0;
+    animation: fadeIn 0.3s ease-out;
 }
 
 .panel-content {
     height: 100%;
     overflow-y: auto;
-    padding: 20px;
 }
 
 .card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
+    background: rgba(17, 25, 40, 0.85);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
 }
 
 .card-header {
-    background: rgba(0, 0, 0, 0.03);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    padding: 1.2rem;
-    border-radius: 12px 12px 0 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1.2rem 1.2rem 1.2rem 1.2rem;
+    border-radius: 16px 16px 0 0;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    justify-content: flex-start;
+    align-items: flex-start;
+    position: relative;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.header-main {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+    width: 100%;
 }
 
 .card-title {
     margin: 0;
-    font-size: 1.4rem;
+    font-size: clamp(1.2rem, 4vw, 1.4rem);
     font-weight: 600;
-    color: #333;
+    color: white;
 }
 
 .badge {
     font-size: 0.8rem;
     padding: 0.4em 0.8em;
-    background: #007bff;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin-left: 0;
+    margin-top: 0.2rem;
+}
+
+.close-btn {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    z-index: 2;
+}
+
+.close-btn:hover {
+    opacity: 1;
 }
 
 .card-body {
@@ -199,23 +238,24 @@ onUnmounted(() => {
 }
 
 .card-text {
-    font-size: 1rem;
+    font-size: clamp(0.9rem, 3vw, 1rem);
     line-height: 1.6;
-    color: #444;
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 1.5rem;
 }
 
 .port-details {
-    background: rgba(0, 0, 0, 0.02);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
     padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .detail-item {
     display: flex;
     justify-content: space-between;
     margin-bottom: 0.5rem;
-    font-size: 0.9rem;
+    font-size: clamp(0.8rem, 2.5vw, 0.9rem);
 }
 
 .detail-item:last-child {
@@ -223,40 +263,62 @@ onUnmounted(() => {
 }
 
 .detail-label {
-    color: #666;
+    color: rgba(255, 255, 255, 0.7);
     font-weight: 500;
 }
 
 .detail-value {
-    color: #333;
+    color: white;
 }
 
-.no-selection {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: #666;
-    font-size: 1.1rem;
-    text-align: center;
-    padding: 2rem;
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -48%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .title-container {
+        top: 10px;
+        padding: 12px 15px;
+    }
+
+    .info-panel {
+        width: 95%;
+    }
+
+    .card-header {
+        padding: 1rem 1rem 1rem 1rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
 }
 
 /* Scrollbar styling */
 .panel-content::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 
 .panel-content::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
 }
 
 .panel-content::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
 }
 
 .panel-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.3);
 }
 </style>
